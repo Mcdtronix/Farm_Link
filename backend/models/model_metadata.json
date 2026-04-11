@@ -1,0 +1,32 @@
+{
+  "model_name": "TomatoGrader_MobileNetV2",
+  "version": "1.0.0",
+  "img_size": [
+    224,
+    224
+  ],
+  "classes": [
+    "Grade_A",
+    "Grade_B",
+    "Grade_C",
+    "Rejects"
+  ],
+  "class_names": [
+    "Grade A",
+    "Grade B",
+    "Grade C",
+    "Reject"
+  ],
+  "test_accuracy": 0.7888,
+  "preprocessing": "rescale to [0,1]",
+  "grading_context": {
+    "Grade_A": "Premium. Uniform size (>65mm), deep red, zero blemishes.",
+    "Grade_B": "Good. Slight variation, minor surface marks, 50-65mm.",
+    "Grade_C": "Fair. Irregular shape/color, small defects, <50mm.",
+    "Rejects": "Unfit for market. Severe damage, disease, or non-tomato."
+  },
+  "usage": {
+    "django": "Load with tf.keras.models.load_model('tomato_grader_final.h5')",
+    "react_native": "Use with react-native-fast-tflite or tflite-react-native"
+  }
+}
