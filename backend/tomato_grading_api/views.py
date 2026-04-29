@@ -35,7 +35,7 @@ Endpoints:
     POST /api/v1/auth/logout/           LogoutView
     GET  /api/v1/auth/me/               UserProfileView
 """
-
+import threading 
 import logging
 from datetime import timedelta
 
@@ -970,46 +970,54 @@ class RegisterView(APIView):
             logger.info(f"   Verification Code: {verification_code}")
             logger.info(f"   Expires: {verification.expires_at}")
             
-            try:
-                send_mail(
-                    subject='Activate Your AgriLink Account - Verification Code Required',
-                    message=f'''
-Hi {user.first_name or user.username},
+            # ✅ Non-blocking — fires email in background thread
+            first_name       = user.first_name
+            username         = user.username
+            email_addr       = user.email
 
-Welcome to AgriLink! 🌾
+            def _send_activation_email():
+                try:
+                    send_mail(
+                        subject='Activate Your AgriLink Account - Verification Code Required',
+                        message=f'''
+            Hi {first_name or username},
 
-Your account has been created successfully. To activate your account and start using AgriLink, please verify your email address.
+            Welcome to AgriLink! 🌾
 
-ACTIVATE ACCOUNT
-──────────────────────────────────
-Verification Code: {verification_code}
+            Your account has been created successfully. To activate your account and start using AgriLink, please verify your email address.
 
-How to activate:
-1. Open the AgriLink app
-2. Enter your email: {user.email}
-3. Enter the 6-digit verification code above
-4. Your account will be activated instantly
+            ACTIVATE ACCOUNT
+            ──────────────────────────────────
+            Verification Code: {verification_code}
 
-This code will expire in 24 hours.
+            How to activate:
+            1. Open the AgriLink app
+            2. Enter your email: {email_addr}
+            3. Enter the 6-digit verification code above
+            4. Your account will be activated instantly
 
-⚠️  IMPORTANT SECURITY NOTES:
-• AgriLink staff will NEVER ask you for this code
-• Never share this code with anyone
-• If you didn't create this account, please ignore this email
+            This code will expire in 24 hours.
 
-Questions? Contact our support team.
+            ⚠️  IMPORTANT SECURITY NOTES:
+            - AgriLink staff will NEVER ask you for this code
+            - Never share this code with anyone
+            - If you didn't create this account, please ignore this email
 
-Best regards,
-The AgriLink Team
-                    ''',
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[user.email],
-                    fail_silently=False,
-                )
-                logger.info(f"✅ ACTIVATION EMAIL SENT SUCCESSFULLY TO: {user.email}")
-            except Exception as e:
-                logger.error(f"❌ FAILED TO SEND ACTIVATION EMAIL: {e}")
-                # Don't fail registration if email fails
+            Questions? Contact our support team.
+
+            Best regards,
+            The AgriLink Team
+                        ''',
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[email_addr],
+                        fail_silently=True,
+                    )
+                    logger.info(f"✅ ACTIVATION EMAIL SENT SUCCESSFULLY TO: {email_addr}")
+                except Exception as e:
+                    logger.error(f"❌ FAILED TO SEND ACTIVATION EMAIL TO {email_addr}: {e}")
+
+            threading.Thread(target=_send_activation_email, daemon=True).start()
+            logger.info(f"📧 ACTIVATION EMAIL THREAD STARTED FOR: {user.email}")
             
             # Track successful registration
             track_login_attempt(
@@ -1154,6 +1162,14 @@ class VerifyEmailCodeView(APIView):
                 "message": "An error occurred during verification. Please try again."
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+import threading
+from django.core.mail import send_mail
+from django.conf import settings
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from rest_framework.throttling import ScopedRateThrottle
+from rest_framework.response import Response
+from rest_framework import status
 
 class ResendVerificationView(APIView):
     """Resend email verification code."""
@@ -1180,57 +1196,66 @@ class ResendVerificationView(APIView):
             # Generate new code
             new_code = verification.generate_code()
 
-            # Send email with new code
-            send_mail(
-                subject='Activate Your AgriLink Account - Verification Code Required',
-                message=f'''
-Hi {user.first_name or user.username},
+            # Prepare variables for threading
+            _first_name  = user.first_name
+            _username    = user.username
+            _email_addr  = user.email
+            _new_code    = new_code
+
+            # ✅ Non-blocking resend
+            def _send_resend_email():
+                try:
+                    send_mail(
+                        subject='Activate Your AgriLink Account - New Verification Code',
+                        message=f'''
+Hi {_first_name or _username},
 
 We received a request to resend your verification code.
 
 ACTIVATE ACCOUNT
 ──────────────────────────────────
-Your new verification code is: {new_code}
+Your new verification code is: {_new_code}
 
 How to activate:
 1. Open the AgriLink app
-2. Enter your email: {user.email}
+2. Enter your email: {_email_addr}
 3. Enter the 6-digit verification code above
 4. Your account will be activated instantly
 
 This code will expire in 24 hours.
 
 ⚠️  IMPORTANT SECURITY NOTES:
-• AgriLink staff will NEVER ask you for this code
-• Never share this code with anyone
-• If you didn't create this account, please ignore this email
+- AgriLink staff will NEVER ask you for this code
+- Never share this code with anyone
+- If you didn't create this account, please ignore this email
 
 Questions? Contact our support team.
 
 Best regards,
 The AgriLink Team
-                ''',
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                fail_silently=False,
-            )
+                        ''',
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[_email_addr],
+                        fail_silently=True,
+                    )
+                    logger.info(f"✅ VERIFICATION CODE RESENT TO: {_email_addr}")
+                except Exception as e:
+                    logger.error(f"❌ FAILED TO RESEND VERIFICATION CODE: {e}")
 
-            logger.info(f"✅ VERIFICATION CODE RESENT TO: {email}")
+            threading.Thread(target=_send_resend_email, daemon=True).start()
+            logger.info(f"📧 RESEND EMAIL THREAD STARTED FOR: {email}")
 
         except User.DoesNotExist:
-            logger.warning(f"⚠️  RESEND REQUEST FOR NON-EXISTENT EMAIL: {email}")
-            # Don't reveal that email doesn't exist
+            logger.warning(f"⚠️ RESEND REQUEST FOR NON-EXISTENT EMAIL: {email}")
+            # Prevent email enumeration
             pass
         except Exception as e:
             logger.error(f"❌ FAILED TO RESEND VERIFICATION CODE: {e}")
             # Still return 200 to prevent enumeration
 
-        # Always return the same message regardless of outcome
         return Response({
             "message": "If an account exists with this email, a new verification code has been sent."
         }, status=status.HTTP_200_OK)
-
-
 class LoginView(APIView):
     """Enhanced login with 2FA support."""
     permission_classes = [AllowAny]

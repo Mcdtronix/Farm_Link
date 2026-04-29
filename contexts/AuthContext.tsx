@@ -18,7 +18,9 @@ const USERS_KEY = "@agrilink_users";
 // Fallbacks: Android emulator uses 10.0.2.2, others use localhost.
 const DEFAULT_HOST = Platform.OS === 'android' ? "10.0.2.2:8000" : "localhost:8000";
 const HOST = process.env.EXPO_PUBLIC_DOMAIN || DEFAULT_HOST;
-const API_BASE_URL = `http://${HOST}/api/v1`;
+const API_BASE_URL = HOST.startsWith("http://") || HOST.startsWith("https://")
+  ? `${HOST.replace(/\/$/, "")}/api/v1`
+  : `http://${HOST}/api/v1`;
 interface RegisterData {
   name: string;
   email: string;

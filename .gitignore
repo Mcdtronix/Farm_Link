@@ -31,14 +31,12 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
 
 # typescript
 *.tsbuildinfo
 .vercel
 
-.env
+#.env
 
 # Python
 __pycache__/
@@ -70,10 +68,10 @@ db.sqlite3-journal
 media/
 staticfiles/
 
-# Virtual Environment
-venv/
-env/
-ENV/
+# # Virtual Environment
+# venv/
+# env/
+# ENV/
 
 # IDE
 .idea/
@@ -82,8 +80,8 @@ ENV/
 *.swo
 
 # Environment variables
-.env
-.env.local
+#.env
+#.env.local
 
 # OS
 .DS_Store

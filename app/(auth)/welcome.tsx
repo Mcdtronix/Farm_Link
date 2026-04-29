@@ -108,10 +108,6 @@ export default function WelcomeScreen() {
           >
             <Text style={styles.secondaryBtnText}>Sign In</Text>
           </Pressable>
-
-          <Text style={styles.demoHint}>
-            Demo: farmer@demo.com / buyer@demo.com{"\n"}Password: demo123
-          </Text>
         </View>
       </Animated.View>
     </View>
