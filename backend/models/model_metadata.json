@@ -17,7 +17,7 @@
     "Grade C",
     "Reject"
   ],
-  "test_accuracy": 0.7888,
+  "test_accuracy": 0.8551,
   "preprocessing": "rescale to [0,1]",
   "grading_context": {
     "Grade_A": "Premium. Uniform size (>65mm), deep red, zero blemishes.",

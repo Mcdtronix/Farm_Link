@@ -67,9 +67,9 @@ media/
 staticfiles/
 
 # # Virtual Environment
-# venv/
-# env/
-# ENV/
+venv/
+env/
+ENV/
 
 # IDE
 .idea/
@@ -79,6 +79,7 @@ staticfiles/
 
 # Environment variables
 #.env
+env
 #.env.local
 
 # OS
@@ -101,3 +102,36 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+
+# ── Secrets — NEVER commit
+.env
+.env.local
+Backend/.env
+
+# ── Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# ── Media uploads
+media/
+
+# ── Node (if frontend exists)
+node_modules/
+dist/
+
+# ── OS
+.DS_Store
+Thumbs.db
+
+# Never commit — contains secrets
+.env
+.env.local
+.env*.local
+backend/.env
+
+# Safe to commit — contains only URLs, no secrets
+!.env.development
+!.env.production

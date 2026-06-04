@@ -1,0 +1,42 @@
+name: Deploy FarmLinkAI to VPS
+
+on:
+  push:
+    branches: [main]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            echo "🚀 Deploying FarmLinkAI Backend..."
+
+            cd ~/farmlinkAI-backend
+            git fetch origin
+            git reset --hard origin/main
+            git clean -fd
+
+            cd backend
+            source ~/farmlinkAI-backend/venv/bin/activate
+            pip install -r requirements.txt --quiet
+            python manage.py migrate --noinput
+            python manage.py collectstatic --noinput
+            deactivate
+
+            sudo systemctl restart farmlinkAI
+
+            echo "✅ FarmLinkAI deployed at https://farmlinkai.mcdtronix.co.zw"
