@@ -66,7 +66,7 @@ db.sqlite3-journal
 media/
 staticfiles/
 
-# # Virtual Environment
+# Virtual Environment
 venv/
 env/
 ENV/
@@ -133,5 +133,23 @@ Thumbs.db
 backend/.env
 
 # Safe to commit — contains only URLs, no secrets
+!.env.development
+!.env.production
+
+# Virtual environments — NEVER commit these
+venv/
+env/
+.env/
+backend/env/
+backend/venv/
+*.pyc
+__pycache__/
+
+# Environment files — secrets
+.env
+.env.local
+backend/.env
+
+# Safe to commit
 !.env.development
 !.env.production
