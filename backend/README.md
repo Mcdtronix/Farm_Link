@@ -111,7 +111,7 @@ curl -X POST http://localhost:8000/api/v1/grade/ \
   -H "Authorization: Bearer <access_token>" \
   -F "image=@/path/to/tomato.jpg"
 ```
-############################################
+
 **Response:**
 ```json
 {
